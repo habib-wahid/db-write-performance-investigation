@@ -1,12 +1,11 @@
 package com.example.event_db_connect.dto;
 
 import java.io.Serializable;
-import java.time.LocalDateTime;
 import java.time.ZonedDateTime;
 import java.util.List;
 
 
-public class Event implements Serializable {
+public class EventDto implements Serializable {
     private String eventId;
     private String aggregateId;
     private String aggregateType;

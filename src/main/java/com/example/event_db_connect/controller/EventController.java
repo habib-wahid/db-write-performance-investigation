@@ -1,8 +1,8 @@
 package com.example.event_db_connect.controller;
-import com.example.event_db_connect.dto.Event;
-import com.example.event_db_connect.EventStoreService;
-import com.fasterxml.jackson.annotation.JsonAutoDetect;
-import com.fasterxml.jackson.annotation.PropertyAccessor;
+import com.example.event_db_connect.EventRepository;
+import com.example.event_db_connect.dto.EventDto;
+import com.example.event_db_connect.entity.Event;
+import com.example.event_db_connect.entity.Payload;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -24,37 +24,46 @@ public class EventController {
 
     static List<List<String>> dataList = new ArrayList<>();
     private String[] nameString = {"Wireless Mourse", "Mechanical Keyboard", "placed", "Johndoe", "e-commerce-service", "Order", "OrderPlaced"};
-    private final EventStoreService eventStoreService;
-    private final ObjectMapper objectMapper;
+   //private final EventStoreService eventStoreService;
+    private final EventRepository eventRepository;
 
-    public EventController(EventStoreService eventStoreService, ObjectMapper objectMapper) {
-        this.eventStoreService = eventStoreService;
-        this.objectMapper = objectMapper;
-        this.objectMapper.setVisibility(PropertyAccessor.FIELD, JsonAutoDetect.Visibility.ANY);
+
+    public EventController(ObjectMapper objectMapper, EventRepository eventRepository) {
+        this.eventRepository = eventRepository;
+        //   this.eventStoreService = eventStoreService;
+      //  this.objectMapper = objectMapper;
+       // this.objectMapper.setVisibility(PropertyAccessor.FIELD, JsonAutoDetect.Visibility.ANY);
     }
 
     @PostMapping("/api/event")
     public void createEvent(@RequestParam(value = "eventCount") Integer eventCount) throws JsonProcessingException {
+
         for (int i = 0; i < eventCount; i++) {
-            Event event = getRandomEventObject();
-            String streamName = "Stream_".concat(String.valueOf(i));
-            String eventJson = objectMapper.writeValueAsString(event);
-            // Append an event
-            try {
-                Long beforeTime = System.currentTimeMillis();
-                eventStoreService.appendEvent(streamName, "APPEND", eventJson, i, eventCount);
-                Long afterTime = System.currentTimeMillis();
-                Long timeDiff = afterTime - beforeTime;
+            Event event = new Event();
+            event.setEventId(UUID.randomUUID().toString());
+            event.setAggregateId(UUID.randomUUID().toString());
+            event.setAggregateType("Order");
+            event.setEventType("OrderCreated");
+            event.setTimestamp(ZonedDateTime.now());
 
-                List<String> row = new ArrayList<>();
-                row.add(event.getEventId());
-                row.add(timeDiff.toString());
-                dataList.add(row);
+            Payload payload = new Payload();
+            payload.setOrderId(UUID.randomUUID().toString());
+            payload.setCustomerId("customer");
+            payload.setItems(List.of(
+                    new Payload.Item(UUID.randomUUID().toString(), "sfdsf", 100, 100),
+                    new Payload.Item(UUID.randomUUID().toString(), "sfdsf", 100, 100)
+            ));
+            event.setPayload(payload);
 
-            } catch (Throwable e) {
-                throw new RuntimeException(e);
-            }
+            Long beforTime = System.currentTimeMillis();
+            eventRepository.save(event);
+            Long afterTime = System.currentTimeMillis();
+            Long diff = afterTime - beforTime;
+
+
         }
+
+
     }
 
     private void writeToCSV(int times) {
@@ -73,26 +82,26 @@ public class EventController {
         }
     }
 
-    private Event getRandomEventObject() {
+    private EventDto getRandomEventObject() {
 
 
         Random random = new Random();
       //  int randomIndex = random.nextInt(nameString.length);
 
-        Event.Payload.Item item1 = new Event.Payload.Item();
+        EventDto.Payload.Item item1 = new EventDto.Payload.Item();
         item1.setItemId(UUID.randomUUID().toString());
         item1.setName(nameString[random.nextInt(nameString.length)]);
         item1.setQuantity(1);
         item1.setPrice(29.99);
 
-        Event.Payload.Item item2 = new Event.Payload.Item();
+        EventDto.Payload.Item item2 = new EventDto.Payload.Item();
         item2.setItemId(UUID.randomUUID().toString());
         item2.setName(nameString[random.nextInt(nameString.length)]);
         item2.setQuantity(1);
         item2.setPrice(89.99);
 
         // Create payload
-        Event.Payload payload = new Event.Payload();
+        EventDto.Payload payload = new EventDto.Payload();
         payload.setOrderId(UUID.randomUUID().toString());
         payload.setCustomerId(UUID.randomUUID().toString());
         payload.setItems(Arrays.asList(item1, item2));
@@ -100,30 +109,30 @@ public class EventController {
         payload.setOrderStatus(nameString[random.nextInt(nameString.length)]);
 
         // Create user
-        Event.Metadata.User user = new Event.Metadata.User();
+        EventDto.Metadata.User user = new EventDto.Metadata.User();
         user.setUserId(UUID.randomUUID().toString());
         user.setUsername(nameString[random.nextInt(nameString.length)]);
         user.setIpAddress(nameString[random.nextInt(nameString.length)]);
 
         // Create metadata
-        Event.Metadata metadata = new Event.Metadata();
+        EventDto.Metadata metadata = new EventDto.Metadata();
         metadata.setSource(nameString[random.nextInt(nameString.length)]);
         metadata.setUser(user);
         metadata.setTraceId(UUID.randomUUID().toString());
         metadata.setTags(Arrays.asList(nameString[random.nextInt(nameString.length)],nameString[random.nextInt(nameString.length)]));
 
         // Create the event
-        Event event = new Event();
-        event.setEventId(UUID.randomUUID().toString());
-        event.setAggregateId(UUID.randomUUID().toString());
-        event.setAggregateType(nameString[random.nextInt(nameString.length)]);
-        event.setTimestamp(ZonedDateTime.parse("2025-01-23T15:30:45.123Z"));
-        event.setEventType(nameString[random.nextInt(nameString.length)]);
-        event.setPayload(payload);
-        event.setMetadata(metadata);
+        EventDto eventDto = new EventDto();
+        eventDto.setEventId(UUID.randomUUID().toString());
+        eventDto.setAggregateId(UUID.randomUUID().toString());
+        eventDto.setAggregateType(nameString[random.nextInt(nameString.length)]);
+        eventDto.setTimestamp(ZonedDateTime.parse("2025-01-23T15:30:45.123Z"));
+        eventDto.setEventType(nameString[random.nextInt(nameString.length)]);
+        eventDto.setPayload(payload);
+        eventDto.setMetadata(metadata);
 
 
-        return event;
+        return eventDto;
     }
 }
 
