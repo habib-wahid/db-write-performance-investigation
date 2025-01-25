@@ -60,9 +60,13 @@ public class EventController {
             Long afterTime = System.currentTimeMillis();
             Long diff = afterTime - beforTime;
 
-
+            List<String> row = new ArrayList<>();
+            row.add(event.getEventId());
+            row.add(diff.toString());
+            dataList.add(row);
         }
 
+        writeToCSV(eventCount);
 
     }
 
