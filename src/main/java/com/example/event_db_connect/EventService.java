@@ -1,13 +1,10 @@
-package com.example.event_db_connect.controller;
-import com.example.event_db_connect.EventService;
+package com.example.event_db_connect;
+
 import com.example.event_db_connect.dto.Event;
-import com.fasterxml.jackson.annotation.JsonAutoDetect;
-import com.fasterxml.jackson.annotation.PropertyAccessor;
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import com.mongodb.client.MongoCollection;
+import org.bson.Document;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
 
 import java.io.BufferedWriter;
 import java.io.FileWriter;
@@ -18,49 +15,22 @@ import java.time.LocalDateTime;
 import java.time.ZonedDateTime;
 import java.util.*;
 
+@Service
+public class EventService {
 
-@RestController
-public class EventController {
+    private String[] nameString = {"Wireless Mourse", "Mechanical Keyboard", "placed", "Johndoe", "e-commerce-service", "Order", "OrderPlaced"};
 
     static List<List<String>> dataList = new ArrayList<>();
-    private String[] nameString = {"Wireless Mourse", "Mechanical Keyboard", "placed", "Johndoe", "e-commerce-service", "Order", "OrderPlaced"};
-    private final ObjectMapper objectMapper;
-    private final EventService eventService;
 
-    public EventController(ObjectMapper objectMapper, EventService eventService) {
-        this.objectMapper = objectMapper;
-        this.eventService = eventService;
-        this.objectMapper.setVisibility(PropertyAccessor.FIELD, JsonAutoDetect.Visibility.ANY);
-    }
+    @Autowired
+    private MongoDBConfig mongoDBConfig;
 
-    @PostMapping("/api/event")
-    public void createEvent(@RequestParam(value = "eventCount") Integer eventCount) throws JsonProcessingException {
+    public void saveEntity(Integer eventCount) {
 
-        eventService.saveEntity(eventCount);
-    }
-
-    private void writeToCSV(int times) {
-        String FILE_PATH = "/home/habibur/Documents/"+times+"_events_log_at"+ LocalDateTime.now()+".csv";
-        try (BufferedWriter writer = new BufferedWriter(new FileWriter(FILE_PATH, true))) {
-            if (Files.size(Paths.get(FILE_PATH)) == 0) {
-                writer.append("eventidentifier,store time\n");
-            }
-            for (List<String> row : dataList) {
-                writer.append(row.get(0)).append(",").append(row.get(1)).append("\n");
-            }
-          //  counter = 0;
-            System.out.println("Finish writing to file");
-        } catch (IOException e) {
-            System.err.println("Error writing to CSV file: " + e.getMessage());
-        }
-    }
-
-    private Event getRandomEventObject() {
-
-
+        for(int i = 0; i < eventCount; i++) {
+        MongoCollection<Document> collection = mongoDBConfig.getCollection("event_source");
+        Document entity = new Document();
         Random random = new Random();
-      //  int randomIndex = random.nextInt(nameString.length);
-
         Event.Payload.Item item1 = new Event.Payload.Item();
         item1.setItemId(UUID.randomUUID().toString());
         item1.setName(nameString[random.nextInt(nameString.length)]);
@@ -73,7 +43,7 @@ public class EventController {
         item2.setQuantity(1);
         item2.setPrice(89.99);
 
-        // Create payload
+
         Event.Payload payload = new Event.Payload();
         payload.setOrderId(UUID.randomUUID().toString());
         payload.setCustomerId(UUID.randomUUID().toString());
@@ -81,20 +51,18 @@ public class EventController {
         payload.setTotalAmount(119.98);
         payload.setOrderStatus(nameString[random.nextInt(nameString.length)]);
 
-        // Create user
+
         Event.Metadata.User user = new Event.Metadata.User();
         user.setUserId(UUID.randomUUID().toString());
         user.setUsername(nameString[random.nextInt(nameString.length)]);
         user.setIpAddress(nameString[random.nextInt(nameString.length)]);
 
-        // Create metadata
         Event.Metadata metadata = new Event.Metadata();
-        metadata.setSource(nameString[random.nextInt(nameString.length)]);
+        metadata.setSource("source");
         metadata.setUser(user);
         metadata.setTraceId(UUID.randomUUID().toString());
         metadata.setTags(Arrays.asList(nameString[random.nextInt(nameString.length)],nameString[random.nextInt(nameString.length)]));
 
-        // Create the event
         Event event = new Event();
         event.setEventId(UUID.randomUUID().toString());
         event.setAggregateId(UUID.randomUUID().toString());
@@ -104,9 +72,39 @@ public class EventController {
         event.setPayload(payload);
         event.setMetadata(metadata);
 
+        //entity.append("event", event);
 
-        return event;
+            Long beforeTime = System.currentTimeMillis();
+            entity.append("event".concat(String.valueOf(i)), event);
+            collection.insertOne(entity);
+            Long afterTime = System.currentTimeMillis();
+            long diff = afterTime - beforeTime;
+
+            List<String> row = new ArrayList<>();
+            row.add(event.getEventId());
+            row.add(String.valueOf(diff));
+            dataList.add(row);
+        }
+
+        writeToCSV(eventCount);
     }
+
+    private void writeToCSV(int times) {
+        String FILE_PATH = "/home/habibur/Documents/"+times+"_events_log_at"+ LocalDateTime.now()+".csv";
+        try (BufferedWriter writer = new BufferedWriter(new FileWriter(FILE_PATH, true))) {
+            if (Files.size(Paths.get(FILE_PATH)) == 0) {
+                writer.append("eventidentifier,store time\n");
+            }
+            for (List<String> row : dataList) {
+                writer.append(row.get(0)).append(",").append(row.get(1)).append("\n");
+            }
+            //  counter = 0;
+            System.out.println("Finish writing to file");
+        } catch (IOException e) {
+            System.err.println("Error writing to CSV file: " + e.getMessage());
+        }
+    }
+
+
+
 }
-
-

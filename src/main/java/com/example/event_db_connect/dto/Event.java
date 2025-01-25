@@ -44,6 +44,26 @@ public class Event implements Serializable {
             this.orderStatus = orderStatus;
         }
 
+        public String getOrderId() {
+            return orderId;
+        }
+
+        public String getCustomerId() {
+            return customerId;
+        }
+
+        public List<Item> getItems() {
+            return items;
+        }
+
+        public double getTotalAmount() {
+            return totalAmount;
+        }
+
+        public String getOrderStatus() {
+            return orderStatus;
+        }
+
         // Getters and setters
 
         public static class Item {
@@ -66,6 +86,22 @@ public class Event implements Serializable {
 
             public void setPrice(double price) {
                 this.price = price;
+            }
+
+            public String getItemId() {
+                return itemId;
+            }
+
+            public String getName() {
+                return name;
+            }
+
+            public int getQuantity() {
+                return quantity;
+            }
+
+            public double getPrice() {
+                return price;
             }
 
             // Getters and setters
@@ -94,6 +130,22 @@ public class Event implements Serializable {
             this.tags = tags;
         }
 
+        public String getSource() {
+            return source;
+        }
+
+        public User getUser() {
+            return user;
+        }
+
+        public String getTraceId() {
+            return traceId;
+        }
+
+        public List<String> getTags() {
+            return tags;
+        }
+
         // Getters and setters
 
         public static class User {
@@ -111,6 +163,18 @@ public class Event implements Serializable {
 
             public void setIpAddress(String ipAddress) {
                 this.ipAddress = ipAddress;
+            }
+
+            public String getUserId() {
+                return userId;
+            }
+
+            public String getUsername() {
+                return username;
+            }
+
+            public String getIpAddress() {
+                return ipAddress;
             }
 
             // Getters and setters
