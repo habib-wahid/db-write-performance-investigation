@@ -1,0 +1,21 @@
+
+version: "3.8"
+
+services:
+  postgres:
+    image: timescale/timescaledb:latest-pg17
+    container_name: postgres_event_store
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: event_store
+    ports:
+      - "5432:5432"
+    deploy:
+      resources:
+        limits:
+          cpus: "4.0"
+          memory: 8g
+        reservations:
+          cpus: "4.0"
+          memory: 8g

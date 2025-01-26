@@ -38,6 +38,7 @@ public class EventController {
     @PostMapping("/api/event")
     public void createEvent(@RequestParam(value = "eventCount") Integer eventCount) throws JsonProcessingException {
 
+        System.out.println("Start Time" + LocalDateTime.now());
         for (int i = 0; i < eventCount; i++) {
             Event event = new Event();
             event.setEventId(UUID.randomUUID().toString());
@@ -66,6 +67,7 @@ public class EventController {
             dataList.add(row);
         }
 
+        System.out.println("End Time" + LocalDateTime.now());
         writeToCSV(eventCount);
 
     }
