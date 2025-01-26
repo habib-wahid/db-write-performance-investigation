@@ -1,0 +1,13 @@
+version: '3.8'
+services:
+  mongodb:
+    image: mongo:latest
+    deploy:
+      resources:
+        limits:
+          cpus: '4'
+          memory: 8G
+    ports:
+      - "27017:27017"
+    environment:
+      - MONGO_INITDB_NO_AUTH=true  # Disable authentication

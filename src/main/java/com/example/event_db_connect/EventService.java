@@ -27,6 +27,7 @@ public class EventService {
 
     public void saveEntity(Integer eventCount) {
 
+        System.out.println(LocalDateTime.now());
         for(int i = 0; i < eventCount; i++) {
         MongoCollection<Document> collection = mongoDBConfig.getCollection("event_source");
         Document entity = new Document();
@@ -86,6 +87,7 @@ public class EventService {
             dataList.add(row);
         }
 
+        System.out.println(LocalDateTime.now());
         writeToCSV(eventCount);
     }
 
